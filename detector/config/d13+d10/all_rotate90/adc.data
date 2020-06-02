@@ -1,0 +1,5 @@
+classes= 1
+train=./config/d13+d10/all_rotate90/train.dat
+valid=./config/d13+d10/all_rotate90/val.dat
+anchors=./config/d13+d10/all_rotate90/anchors.txt
+

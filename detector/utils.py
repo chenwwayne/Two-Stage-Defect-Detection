@@ -1,6 +1,7 @@
 from __future__ import division
 import torch
 import numpy as np
+import pdb
 
 
 def print_args(args):
@@ -44,8 +45,56 @@ def xywh2xyxy(x):
     y[..., 3] = x[..., 1] + x[..., 3] / 2
     return y
 
-
 def get_batch_statistics(outputs, targets, iou_threshold):
+    batch_metrics = []
+    target_boxes = None
+    # len(outputs) = batch_size
+    # so, outputs[sample_i] 是一张图片对应的向量：[x,y,w,h,conf]
+    for sample_i in range(len(outputs)):
+        if targets.size(0):  # 存在标签
+            __t = targets[targets[:, 0] == sample_i][:, 1:]
+            if __t.size(0):
+                target_boxes = __t
+
+        if outputs[sample_i] is None:
+            if target_boxes is None:#表明实际是TSFAS,预测也是TSFAS
+                # check what can we do here
+                pass
+            else:
+                # check what can we do here
+                pass
+            continue
+        else: # 模型有输出结果
+                # annotations = targets[targets[:, 0] == sample_i][:, 1:]
+                # target_labels = annotations[:, 0] if len(annotations) else []
+                # if len(annotations):
+                #     detected_boxes = []
+                #     target_boxes = annotations[:, 1:]
+
+                    # for pred_i, (pred_box, pred_label) in enumerate(zip(pred_boxes, pred_labels)):
+                    #     if len(detected_boxes) == len(annotations):
+                    #         break
+                    #     if pred_label not in target_labels:
+                    #         continue
+                output = outputs[sample_i].detach().cpu()
+                pred_boxes = output[:, :4]
+                pred_scores = output[:, 4]
+                # 因为我们只预测一个类别，所以将Pred_labels都置为 0, shape与pred_scores相同
+                pred_labels = torch.full(pred_scores.shape, 0)
+
+                true_positives = np.zeros(pred_boxes.shape[0])
+                if target_boxes is not None:
+                    detected_boxes = []
+                    for pred_i, pred_box in enumerate(pred_boxes):
+                        iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes).max(0)
+                        if iou >= iou_threshold and box_index not in detected_boxes:
+                            true_positives[pred_i] = 1
+                            detected_boxes += [box_index]
+        batch_metrics.append([true_positives, pred_scores, pred_labels])
+    return batch_metrics
+
+# output无缺陷图片的评估信息与缺陷的评估信息
+def get_batch_statistics_ori(outputs, targets, iou_threshold):
     # outputs一个batch的输出，targets一个batch的标签
     # 两者从格式上来讲应该一致，[batch_size,n,5]
     #  0     1      2      3      4
@@ -82,8 +131,9 @@ def get_batch_statistics(outputs, targets, iou_threshold):
             if target_boxes is not None:
                 detected_boxes = []
                 for pred_i, pred_box in enumerate(pred_boxes):
-                    # print(pred_box)
+                    print(pred_box)
                     iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes).max(0)
+
                     if iou >= iou_threshold and box_index not in detected_boxes:
                         detected_boxes += [box_index]
                         batch_metrics[image_idx, 3] += 1
@@ -176,3 +226,56 @@ def voc_ap(rec, prec):
     i = np.where(mrec[1:] != mrec[:-1])[0]  # precision前后两个值不一样的点
     ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
+
+def compute_ap(recall, precision):
+    mrec = np.concatenate(([0.0], recall, [1.0]))
+    mpre = np.concatenate(([0.0], precision, [0.0]))
+
+    for i in range(mpre.size - 1, 0, -1):
+        mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
+
+    i = np.where(mrec[1:] != mrec[:-1])[0]
+    ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
+    return ap
+
+def ap_per_class(tp, conf, pred_cls, target_cls):
+    # tp为one-hot向量，当predbox与gtbox的iou符合条件时为1
+    i = np.argsort(-conf)
+    tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+    unique_classes = np.unique(target_cls)
+    ap, p, r = [], [], []
+
+    # 遍历所有类别
+    for c in unique_classes:
+        i = pred_cls == c # i为一个one-hot列表，当且仅当预测类别 == 当前遍历的其中一个类别时为1
+        n_gt = (target_cls == c).sum()  # Number of ground truth objects
+        n_p = i.sum()  # Number of predicted objects
+
+        if n_p == 0 and n_gt == 0:
+            continue
+        elif n_p == 0 or n_gt == 0:
+            ap.append(0)
+            r.append(0)
+            p.append(0)
+        else:
+            # Accumulate FPs and TPs
+            # tp[i]为预测正确的所有类别中为当前类别A的onehot选中
+            # (1 - tp[i])则是tp[i]的取反
+            fpc = (1 - tp[i]).cumsum()
+            tpc = (tp[i]).cumsum()
+
+            # Recall
+            recall_curve = tpc / (n_gt + 1e-16)
+            r.append(recall_curve[-1])
+
+            # Precision
+            precision_curve = tpc / (tpc + fpc)
+            p.append(precision_curve[-1])
+
+            # AP from recall-precision curve
+            ap.append(compute_ap(recall_curve, precision_curve))
+
+    p, r, ap = np.array(p), np.array(r), np.array(ap)
+    f1 = 2 * p * r / (p + r + 1e-16)
+
+    return p, r, ap, f1, unique_classes.astype("int32")

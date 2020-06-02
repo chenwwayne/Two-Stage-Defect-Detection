@@ -3,14 +3,16 @@ from __future__ import division
 
 from model import ResNet
 from dataset import ListDataset
-from utils import get_anchors, print_args, parse_data_config
-from utils import xywh2xyxy, non_max_suppression, get_batch_statistics
+# from utils import get_anchors, print_args, parse_data_config
+# from utils import xywh2xyxy, non_max_suppression, get_batch_statistics
+from utils import *
 
 import os
 import cv2
 import argparse
 import torch
 import numpy as np
+import pdb
 from torch.autograd import Variable
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -37,11 +39,16 @@ class evaluate():
             example = os.path.join(save_path, 'example')
             if not os.path.exists(example): os.mkdir(example)
             file_idx = 0
+
         sample_metrics = None
+        target_labels = []
         for batch_i, (inputs, targets, cs) in enumerate(self.dataloader):
             imgs = inputs.detach().cpu().numpy().copy() * 255
             if targets.size(0):
                 targets[:, 1:] = xywh2xyxy(targets[:, 1:])
+                target_labels += [0] * len(targets)
+            else:
+                target_labels += [-1] * len(targets)
 
             inputs = Variable(inputs, requires_grad=False).to('cuda')
 
@@ -96,22 +103,32 @@ class evaluate():
                 sample_metrics = get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
             else:
                 sample_metrics += get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
-        image_acc = sample_metrics[:, 4] / (sample_metrics[:, 0] + 1e-16)
-        bbox_acc = sample_metrics[1, 3] / (sample_metrics[1, 2] + 1e-16)
-        bbox_rec = sample_metrics[1, 3] / (sample_metrics[1, 1] + 1e-16)
+
+        if len(sample_metrics) == 0:
+            return np.zeros(1), np.zeros(1), np.zeros(1), np.zeros(1), np.zeros(1)
+        true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+        precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, target_labels)
+
+        print(precision, recall, AP, f1, ap_class)
+        return precision, recall, AP, f1, ap_class
+        # ==================================================================
+        # image_acc = sample_metrics[:, 4] / (sample_metrics[:, 0] + 1e-16)
+        # bbox_acc = sample_metrics[1, 3] / (sample_metrics[1, 2] + 1e-16)
+        # bbox_rec = sample_metrics[1, 3] / (sample_metrics[1, 1] + 1e-16)
         # names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
-        return sample_metrics, image_acc[0], image_acc[1], bbox_acc, bbox_rec
+        # return sample_metrics, image_acc[0], image_acc[1], bbox_acc, bbox_rec
+        # ==================================================================
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", type=int, default=16, help="size of each image batch")
-    parser.add_argument("--data_config", type=str, default="config/v4/adc.data", help="path to data config file")
-    parser.add_argument("--weights_path", type=str, default="/home-ex/tclhk/chenww/t2/models/yolo_v3_x/0117_v4/yolov3_ckpt_34.pth",
+    parser.add_argument("--batch_size", type=int, default=4, help="size of each image batch")
+    parser.add_argument("--data_config", type=str, default="/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/config/85/0418_unchecked_data/adc.data", help="path to data config file")
+    parser.add_argument("--weights_path", type=str, default="/data1/chenww/t2/models/yolo_v3_x/85/0427_0418_unchecked_data_fintunefrom_d13+d10_ori/yolov3_ckpt_49.pth",
                         help="path to weights file")
     parser.add_argument("--iou_thres", type=float, default=0.5, help="iou threshold required to qualify as detected")  # 计算指标用，比方说iou>0.5才算召回
     parser.add_argument("--conf_thres", type=float, default=0.5, help="object confidence threshold")
-    parser.add_argument("--nms_thres", type=float, default=0.0, help="iou thresshold for non-maximum suppression")  # nms函数用，两个bbox若iou大于nms_th，则滤除
+    parser.add_argument("--nms_thres", type=float, default=0.1, help="iou thresshold for non-maximum suppression")  # nms函数用，两个bbox若iou大于nms_th，则滤除
     parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
     parser.add_argument("--img_size", type=int, default=[768, 1024], help="size of each image dimension")
     args = parser.parse_args()
@@ -126,7 +143,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(args.weights_path)['net'])
 
     print('Compute mAP...')
-    save_path = '/home-ex/tclhk/chenww/t2/models/yolo_v3_x/0117_v4/test_result_ep34_iou0.5_conf0.7_nms0.0/'
+    save_path = '/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/pcb/0508_pcb_ori_bs4_1024_768/temp/'
     if os.path.exists(save_path):
         import shutil
         shutil.rmtree(save_path)
@@ -149,12 +166,12 @@ if __name__ == "__main__":
         save_path=save_path,
     )
 
-    print('image_acc: {}\t{}\tbbox_acc: {}\tbbox_recall: {}'.format(*metrics[1:]))
-
-    names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
-    print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*names))
-    print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][0]))
-    print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][1]))
+    # print('image_acc: {}\t{}\tbbox_acc: {}\tbbox_recall: {}'.format(*metrics[1:]))
+    #
+    # names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
+    # print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*names))
+    # print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][0]))
+    # print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][1]))
 
     # print("Average Precisions:")
     # print(f"image_acc: {image_acc0}\t{image_acc1}\tbbox_acc: {bbox_acc}\tbbox_recall: {bbox_rec}")

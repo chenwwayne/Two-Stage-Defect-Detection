@@ -1,0 +1,5 @@
+classes= 1
+train=./config/v6/train.dat
+valid=./config/v6/val.dat
+anchors=./config/v6/anchors.txt
+
