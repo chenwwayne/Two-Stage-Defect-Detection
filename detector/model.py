@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F
-from utils import bbox_wh_iou
+from utils import bbox_wh_iou, get_anchors, model_info
 # from yolo_v3_x.utils import bbox_wh_iou
 
 
@@ -458,12 +458,14 @@ class ResNet(nn.Module):
 if __name__ == '__main__':
     # import os
     # os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-    anchors = [[(np.random.rand(), np.random.rand()) for __ in range(3)] for _ in range(4)]
-    model = ResNet(anchors=anchors)
-    print(model)
+    #
+    anchors = get_anchors('/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/config/small_8cls/anchors.txt').to('cuda')
+    model = ResNet(anchors).to('cuda')
+    model_info(model)
+    # print(model)
 
-    input = torch.randn(1, 3, 224, 224)
-    map, outputs = model(input)
-    print([o.size() for o in map])
-    print()
-    torch.save(model.state_dict(), 'model.pth')
+    # input = torch.randn(1, 3, 224, 224)
+    # map, outputs = model(input)
+    # print([o.size() for o in map])
+    # print()
+    # torch.save(model.state_dict(), 'model.pth')

@@ -5,7 +5,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 print('pid:{}   GPU:{}'.format(os.getpid(), os.environ['CUDA_VISIBLE_DEVICES']))
 
 from model import ResNet
-from utils import parse_data_config, get_anchors, print_args, voc_ap
+from utils import *
 from dataset import ListDataset
 from test import evaluate
 import sys
@@ -25,7 +25,7 @@ def main(argv):
     # parser.add_argument("--pretrained_weights", type=str, default="config/yolov3_ckpt_5.pth")  # models/model1/yolov3_ckpt_73.pth
     parser.add_argument("--pretrained_weights", type=str)  # models/model1/yolov3_ckpt_73.pth
     parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=[768, 1024], help="size of each image dimension")
+    parser.add_argument("--img_size", type=int, default=[896, 896], help="size of each image dimension")
     parser.add_argument("--evaluation_interval", type=int, default=1, help="interval evaluations on validation set")
     parser.add_argument("--multiscale", default='False', choices=['True', 'False'])
     parser.add_argument("--augment", default='False', choices=['True', 'False'])
@@ -61,6 +61,7 @@ def main(argv):
     anchors = get_anchors(data_config['anchors']).to('cuda')
 
     model = ResNet(anchors).to('cuda')
+
     if args.pretrained_weights:
         print('pretrained weights: ', args.pretrained_weights)
         model.load_pretrained_weights(args.pretrained_weights)

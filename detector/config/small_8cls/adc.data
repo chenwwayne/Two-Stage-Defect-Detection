@@ -1,4 +1,4 @@
 classes= 1
 train=./config/small_8cls/train_val.dat
-valid=./config/small_8cls/val.dat
+valid=./config/small_8cls/test.dat
 anchors=./config/small_8cls/anchors.txt

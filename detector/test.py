@@ -109,8 +109,8 @@ class evaluate():
         true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
         precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, target_labels)
 
-        print(precision, recall, AP, f1, ap_class)
-        return precision, recall, AP, f1, ap_class
+        # print(precision, recall, AP, f1)
+        return precision, recall, AP, f1
         # ==================================================================
         # image_acc = sample_metrics[:, 4] / (sample_metrics[:, 0] + 1e-16)
         # bbox_acc = sample_metrics[1, 3] / (sample_metrics[1, 2] + 1e-16)
