@@ -14,6 +14,7 @@ import argparse
 import torch
 from torch.autograd import Variable
 import numpy as np
+import time
 
 
 def main(argv):
@@ -79,7 +80,12 @@ def main(argv):
     print('Number train sample: ', len(dataset))
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=5e-5)
     # 这里优化器和学习率是不是要调节？
+
+
     print('\n### train ...')
+    t0 = time.time()
+    best_fitness = 0.0
+    # start epoch
     for epoch in range(args.epochs):
         model.train()
 
@@ -118,31 +124,32 @@ def main(argv):
                 epoch_str = 'Epoch: {:4}({:4}/{:4})'.format(epoch, batch_i + 1, len(dataloader))
                 print('[{}]{} {} lr:{}'.format(time_str, epoch_str, loss_str, lr))
         print()
-        box_rcl_list = []
-        box_acc_list = []
+
+        # start eval
         if epoch % args.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
             save_model_epoch = 'yolov3_ckpt_{}.pth'.format(epoch)
-            model.save_weights(os.path.join(args.save_path, save_model_epoch))
             print(save_model_epoch)
             example_save_path = args.save_path
+
             # for conf in [0.3, 0.4, 0.5, 0.6]:
-            for conf in [0.3, 0.5, 0.7]:
-                metrics = eval(model, iou_thres=0.5, conf_thres=conf, nms_thres=0.5, save_path=example_save_path)
+            for conf in [0.01]:
+                # eval return: precision, recall, AP, f1, ap_class
+                p, r, ap, f1 = eval(model, iou_thres=0.5, conf_thres=conf, nms_thres=0.5, save_path=example_save_path)
                 example_save_path = None
-                box_acc_list.append(metrics[3])
-                box_rcl_list.append(metrics[4])
-                print('image_acc: {}\t{}\tbbox_acc: {}\tbbox_recall: {}\t'.format(*metrics[1:]))
+                print('precision:{}\trecall:{}\tAP:{}\tF1:{}\t'.format(p, r, ap, f1))
 
-                names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
-                print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*names))
-                print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][0]))
-                print('{:<10}{:<10}{:<10}{:<10}{:<10}'.format(*metrics[0][1]))
-                print()
+            # 寻找最佳的权重并保存
+            fi = fitness([p, r, ap, f1])  # fitness_i = weighted combination of [P, R, mAP, F1]
+            if fi > best_fitness:
+                best_fitness = fi
+                model.save_weights(os.path.join(args.save_path, save_model_epoch))
+        # end eval
+    # end epoch
 
-            box_AP = voc_ap(box_rcl_list, box_acc_list)
-            print('bbox_AP in conf_thres [0.1:0.8:0.2] : {}'.format(box_AP))
-            print('===============================================================================')
+    # 打印训练时间
+    print('%g epochs completed in %.3f hours.\n' % (args.epochs, (time.time() - t0) / 3600))
+
 
 
 if __name__ == "__main__":
