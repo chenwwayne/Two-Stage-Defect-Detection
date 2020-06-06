@@ -280,11 +280,13 @@ def ap_per_class(tp, conf, pred_cls, target_cls):
 
     return p, r, ap, f1, unique_classes.astype("int32")
 
+
 def fitness(x):
     # Returns fitness (for use with results.txt or evolve.txt)
     w = [0.1, 0.1, 0.8, 0.00]  # weights for [P, R, mAP, F1]@0.5 or [P, R, mAP@0.5, mAP@0.5:0.95]
     x = np.array(x)
     return (x * w).sum()
+
 
 def model_info(model, verbose=False):
     # Plots a line-by-line description of a PyTorch model

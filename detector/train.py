@@ -136,7 +136,7 @@ def main(argv):
             # for conf in [0.3, 0.4, 0.5, 0.6]:
             for conf in [0.01]:
                 # eval return: precision, recall, AP, f1, ap_class
-                p, r, ap, f1 = eval(model, iou_thres=0.5, conf_thres=conf, nms_thres=0.5, save_path=example_save_path)
+                p, r, ap, f1 = eval(model, iou_thres=0.5, conf_thres=conf, nms_thres=0.5, save_path=example_save_path, vis=False)
                 example_save_path = None
                 print('precision:{}\trecall:{}\tAP:{}\tF1:{}\t'.format(p, r, ap, f1))
 

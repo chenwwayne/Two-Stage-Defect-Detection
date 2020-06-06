@@ -27,7 +27,7 @@ class evaluate():
             dataset, batch_size=batch_size, shuffle=False, num_workers=0, collate_fn=dataset.collate_fn
         )
         
-    def __call__(self, model, iou_thres, conf_thres, nms_thres, save_path=None):
+    def __call__(self, model, iou_thres, conf_thres, nms_thres, save_path=None, vis=False):
         # iou_thres = 0.5,
         # conf_thres = 0.7, 
         # nms_thres = 0.5,
@@ -55,9 +55,8 @@ class evaluate():
             with torch.no_grad():
                 _, outputs = model(inputs)
                 outputs = non_max_suppression(outputs, conf_thres=conf_thres, nms_thres=nms_thres)
-            """
             # 检测可视化
-            if save_path is not None:
+            if save_path is not None and vis:
                 for idx, img in enumerate(imgs):
                     img = img.astype(np.uint8).transpose(1, 2, 0).copy()
                     c, filename = cs[idx]
@@ -98,7 +97,6 @@ class evaluate():
                         os.mkdir(save_img_path)
                     cv2.imwrite(os.path.join(save_img_path, filename), img)
                     file_idx += 1
-            """
             if sample_metrics is None:
                 sample_metrics = get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
             else:
@@ -123,14 +121,19 @@ class evaluate():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=4, help="size of each image batch")
-    parser.add_argument("--data_config", type=str, default="/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/config/85/0418_unchecked_data/adc.data", help="path to data config file")
-    parser.add_argument("--weights_path", type=str, default="/data1/chenww/t2/models/yolo_v3_x/85/0427_0418_unchecked_data_fintunefrom_d13+d10_ori/yolov3_ckpt_49.pth",
+    parser.add_argument("--data_config", type=str, \
+                        default="/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/config/small_8cls/adc.data", help="path to data config file")
+    parser.add_argument("--weights_path", type=str, \
+                        default="/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/small_8cls/1cls_896_bs_ep300_scratch_kmeansAnchor/yolov3_ckpt_37.pth",
                         help="path to weights file")
     parser.add_argument("--iou_thres", type=float, default=0.5, help="iou threshold required to qualify as detected")  # 计算指标用，比方说iou>0.5才算召回
-    parser.add_argument("--conf_thres", type=float, default=0.5, help="object confidence threshold")
+    parser.add_argument("--conf_thres", type=float, default=0.1, help="object confidence threshold")
     parser.add_argument("--nms_thres", type=float, default=0.1, help="iou thresshold for non-maximum suppression")  # nms函数用，两个bbox若iou大于nms_th，则滤除
     parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=[768, 1024], help="size of each image dimension")
+    parser.add_argument("--img_size", type=int, default=[896, 896], help="size of each image dimension")
+    parser.add_argument("--vis", type=str, default='False', choices=['True', 'False'], help="save inference result")
+    parser.add_argument("--vis_save_path", type=str, \
+                        default='', )
     args = parser.parse_args()
     print_args(args)
 
@@ -143,7 +146,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(args.weights_path)['net'])
 
     print('Compute mAP...')
-    save_path = '/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/pcb/0508_pcb_ori_bs4_1024_768/temp/'
+    save_path = '/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/small_8cls/1cls_896_bs_ep300_scratch_kmeansAnchor/test_result/'
     if os.path.exists(save_path):
         import shutil
         shutil.rmtree(save_path)
@@ -164,7 +167,12 @@ if __name__ == "__main__":
         conf_thres=args.conf_thres,
         nms_thres=args.nms_thres,
         save_path=save_path,
+        vis=args.vis
     )
+    print('{:<10}{:<10}{:<10}{:<10}'.format('precision', 'recall', 'AP', 'F1'))
+    print(metrics)
+    # print('{:<10}{:<10}{:<10}{:<10}'.format('precision', 'recall', 'AP', 'F1'))
+    # print('{:<10}{:<10}{:<10}{:<10}'.format(metrics[0], metrics[1], metrics[2], metrics[3]))
 
     # print('image_acc: {}\t{}\tbbox_acc: {}\tbbox_recall: {}'.format(*metrics[1:]))
     #

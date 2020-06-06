@@ -461,7 +461,7 @@ if __name__ == '__main__':
     #
     anchors = get_anchors('/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/config/small_8cls/anchors.txt').to('cuda')
     model = ResNet(anchors).to('cuda')
-    model_info(model)
+    model_info(model, verbose=True)
     # print(model)
 
     # input = torch.randn(1, 3, 224, 224)
