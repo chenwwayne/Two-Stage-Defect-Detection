@@ -1,4 +1,0 @@
-classes= 1
-train=./config/pcb/train.dat
-valid=./config/pcb/val.dat
-anchors=./config/pcb/anchors.txt

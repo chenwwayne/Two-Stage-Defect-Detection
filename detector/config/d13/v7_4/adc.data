@@ -1,4 +1,0 @@
-classes= 1
-train=./config/v7_4/train.dat
-valid=./config/v7_4/val.dat
-anchors=./config/v7_4/anchors.txt

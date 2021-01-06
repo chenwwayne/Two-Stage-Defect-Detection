@@ -1,5 +1,0 @@
-classes= 1
-train=./config/v4_filter_50/train.dat
-valid=./config/v4_filter_50/val.dat
-anchors=./config/v4_filter_50/anchors.txt
-

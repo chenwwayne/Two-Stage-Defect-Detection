@@ -1,0 +1,5 @@
+classes= 1
+train=./config/9cls/0106/train.dat
+valid=./config/9cls/0106/test.dat
+anchors=./config/9cls/0106/anchors.txt
+

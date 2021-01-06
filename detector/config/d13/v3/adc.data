@@ -1,5 +1,0 @@
-classes= 1
-train=./config/v3/train.dat
-valid=./config/v3/val.dat
-anchors=./config/v3/anchors.txt
-

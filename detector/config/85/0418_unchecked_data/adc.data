@@ -1,5 +1,0 @@
-classes= 1
-train=./config/85/0418_unchecked_data/train.dat
-valid=./config/85/0418_unchecked_data/val.dat
-anchors=./config/85/0418_unchecked_data/anchors.txt
-
