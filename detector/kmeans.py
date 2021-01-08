@@ -81,13 +81,13 @@ def plot_cluster_result(clusters,nearest_clusters,WithinClusterSumDist,wh,k):
         plt.ylabel("height")
     plt.legend(title="Mean IoU = {:5.4f}".format(WithinClusterSumDist))
     plt.tight_layout()
-    plt.savefig("./config/small_8cls/kmeans.jpg")
+    plt.savefig("./config/9cls/0107_3_train_test/kmeans.jpg")
     # plt.show()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_txt", type=str, default="./config/small_8cls/train_val.dat")
-    parser.add_argument("--anchors_txt", type=str, default="./config/small_8cls/anchors.txt")
+    parser.add_argument("--dataset_txt", type=str, default="./config/9cls/0107_3_train_test/train.dat")
+    parser.add_argument("--anchors_txt", type=str, default="./config/9cls/0107_3_train_test/anchors.txt")
     parser.add_argument("--cluster_num", type=int, default=12)
     args = parser.parse_args()
     anno_result = parse_anno(args.dataset_txt)

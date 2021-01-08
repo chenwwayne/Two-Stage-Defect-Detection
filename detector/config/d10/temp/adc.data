@@ -1,5 +1,0 @@
-classes= 1
-train=./config/d10/temp/train_test.dat
-valid=./config/d10/temp/val.dat
-anchors=./config/d10/temp/anchors.txt
-

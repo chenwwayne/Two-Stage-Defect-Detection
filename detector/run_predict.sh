@@ -1,10 +1,10 @@
-OUTPUT_PATH=/data1/chenww/my_research/yolo_v3_x/models/pcb/0508_pcb_ori_bs4_1024_768/pred_result_ep99_conf0.4_nms0.5/
+OUTPUT_PATH=/home/chenww/project/Two-Stage-Defect-Detection/detector/models/9cls/9cls_3_train_test_bs8_imgsz7681024_ep150_scratch/example/
 rm -rf ${OUTPUT_PATH}
 mkdir ${OUTPUT_PATH}
 
 python predict.py \
---pretrained_weights=/data1/chenww/my_research/yolo_v3_x/models/pcb/0508_pcb_ori_bs4_1024_768/yolov3_ckpt_99.pth  \
---test_data_path=/data1/chenww/my_research/yolo_v3_x/config/pcb/val.dat \
+--pretrained_weights=/home/chenww/project/Two-Stage-Defect-Detection/detector/models/9cls/9cls_3_train_test_bs8_imgsz7681024_ep150_scratch/yolov3_ckpt_14.pth  \
+--test_data_path=/home/chenww/project/Two-Stage-Defect-Detection/detector/config/9cls/0107_3_train_test/test.dat \
 --conf_thres=0.4 \
 --iou_thres=0.5 \
 --output_txt=${OUTPUT_PATH} \

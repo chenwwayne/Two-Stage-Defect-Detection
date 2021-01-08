@@ -98,23 +98,24 @@ class evaluate():
                     cv2.imwrite(os.path.join(save_img_path, filename), img)
                     file_idx += 1
             if sample_metrics is None:
-                sample_metrics = get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
+                sample_metrics = get_batch_statistics_ori(outputs, targets, iou_threshold=iou_thres)
             else:
-                sample_metrics += get_batch_statistics(outputs, targets, iou_threshold=iou_thres)
+                sample_metrics += get_batch_statistics_ori(outputs, targets, iou_threshold=iou_thres)
 
         if len(sample_metrics) == 0:
             return np.zeros(1), np.zeros(1), np.zeros(1), np.zeros(1), np.zeros(1)
-        true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
-        precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, target_labels)
+        
+        # true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+        # precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, target_labels)
 
         # print(precision, recall, AP, f1)
-        return precision, recall, AP, f1
+        # return precision, recall, AP, f1
         # ==================================================================
-        # image_acc = sample_metrics[:, 4] / (sample_metrics[:, 0] + 1e-16)
-        # bbox_acc = sample_metrics[1, 3] / (sample_metrics[1, 2] + 1e-16)
-        # bbox_rec = sample_metrics[1, 3] / (sample_metrics[1, 1] + 1e-16)
-        # names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
-        # return sample_metrics, image_acc[0], image_acc[1], bbox_acc, bbox_rec
+        image_acc = sample_metrics[:, 4] / (sample_metrics[:, 0] + 1e-16)
+        bbox_acc = sample_metrics[1, 3] / (sample_metrics[1, 2] + 1e-16)
+        bbox_rec = sample_metrics[1, 3] / (sample_metrics[1, 1] + 1e-16)
+        names = ['image', 'ture', 'det', 'box_acc', 'image_acc']
+        return sample_metrics, image_acc[0], image_acc[1], bbox_acc, bbox_rec
         # ==================================================================
 
 

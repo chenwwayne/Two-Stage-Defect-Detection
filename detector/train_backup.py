@@ -43,8 +43,8 @@ def main(argv):
     if args.debug:
         print('debug...')
         import shutil
-        if os.path.exists(args.save_path):
-            shutil.rmtree(args.save_path)
+        # if os.path.exists(args.save_path):
+        #     shutil.rmtree(args.save_path)
         args.evaluation_interval = 1
         # debug模式下先删除save_path,并每间隔一轮验证一次
 

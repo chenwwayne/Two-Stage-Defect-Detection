@@ -1,7 +1,7 @@
 from __future__ import division
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 print('pid:{}   GPU:{}'.format(os.getpid(), os.environ['CUDA_VISIBLE_DEVICES']))
 
 from model import ResNet
@@ -25,7 +25,7 @@ def main(argv):
     # parser.add_argument("--pretrained_weights", type=str, default="config/yolov3_ckpt_5.pth")  # models/model1/yolov3_ckpt_73.pth
     parser.add_argument("--pretrained_weights", type=str)  # models/model1/yolov3_ckpt_73.pth
     parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=[896, 896], help="size of each image dimension")
+    parser.add_argument("--img_size", type=int, default=[768, 1024], help="size of each image dimension")
     parser.add_argument("--evaluation_interval", type=int, default=1, help="interval evaluations on validation set")
     parser.add_argument("--multiscale", default='False', choices=['True', 'False'])
     parser.add_argument("--augment", default='False', choices=['True', 'False'])

@@ -131,7 +131,6 @@ def get_batch_statistics_ori(outputs, targets, iou_threshold):
             if target_boxes is not None:
                 detected_boxes = []
                 for pred_i, pred_box in enumerate(pred_boxes):
-                    print(pred_box)
                     iou, box_index = bbox_iou(pred_box.unsqueeze(0), target_boxes).max(0)
 
                     if iou >= iou_threshold and box_index not in detected_boxes:

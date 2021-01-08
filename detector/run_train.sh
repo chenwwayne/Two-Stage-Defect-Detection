@@ -1,15 +1,15 @@
-SAVE_PATH=/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/small_8cls/1cls_896_bs_ep300_scratch_kmeansAnchor/
-#SAVE_PATH=/data1/chenww/my_research/Two-Stage-Defect-Detection/detector/models/small_8cls/temp/
+SAVE_PATH=/home/chenww/project/Two-Stage-Defect-Detection/detector/models/9cls/9cls_3_train_test_bs8_imgsz7681024_ep150_scratch/
 rm -rf ${SAVE_PATH}
 mkdir ${SAVE_PATH}
 
-nohup python train.py \
---data_config=./config/small_8cls/adc.data \
---epochs=300 \
+# nohup python train.py \
+python train_backup.py \
+--data_config=./config/9cls/0107_3_train_test/adc.data \
+--epochs=150 \
 --batch_size=8 \
 --n_cpu=0 \
---evaluation_interval=1  \
---debug=False \
+--evaluation_interval=2  \
+--debug=True \
 --save_path=${SAVE_PATH}  \
 --lr=0.01 \
 2>&1 | tee  ${SAVE_PATH}"log.txt" &
