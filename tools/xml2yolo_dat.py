@@ -1,7 +1,6 @@
 import os
 import os.path as osp
 import xml.dom.minidom as minidom
-import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 import cv2
@@ -54,8 +53,8 @@ def read_xml(xml_filename):
     return  bboxes, label_name_list
 
 def main():
-    img_root = '/home/chenww/dataset/2253_d13_9cls_splited/test/'
-    output_dat_path = '/home/chenww/project/Two-Stage-Defect-Detection/detector/config/9cls/0106'
+    img_root = '/home/chenww/dataset/2253_d13_9cls_73/3_train_test/test/'
+    output_dat_path = '/home/chenww/project/Two-Stage-Defect-Detection/detector/config/9cls/0107_3_train_test/'
     train_or_val = 'test' # 生成'train.dat或生成val.dat'
 
     if not os.path.exists(output_dat_path):
@@ -118,11 +117,11 @@ def main():
     print("len of others:", len(info_list))
     print("num_file:", num_file)
 
-    with open(output_dat_path + train_or_val + '.txt', 'w') as f:
+    with open(output_dat_path + train_or_val + '.dat', 'w') as f:
         for img_f, cls, box in info_list:
                 f.write('{} {} {}\n'.format(img_f, cls, box))
-        # for img_f in tsfas_list:
-        #     f.write('{} TSFAS\n'.format(img_f))
+        for img_f in tsfas_list:
+            f.write('{} TSFAS\n'.format(img_f))
 
     print('done')
 

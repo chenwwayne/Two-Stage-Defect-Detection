@@ -9,7 +9,7 @@ python train_backup.py \
 --batch_size=8 \
 --n_cpu=0 \
 --evaluation_interval=2  \
---debug=True \
+--debug=False \
 --save_path=${SAVE_PATH}  \
 --lr=0.01 \
 2>&1 | tee  ${SAVE_PATH}"log.txt" &
